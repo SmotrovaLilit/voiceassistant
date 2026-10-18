@@ -1,0 +1,46 @@
+@baseUrl = http://127.0.0.1:8081
+
+### Process the English recording and save its tasks and visit report in Google Sheets
+# Run make run first. Each request creates new CRM entries.
+# @name uploadAudioMessage
+# @timeout 600 s
+POST {{baseUrl}}/v1/audiomessage
+Accept: application/json
+Content-Type: multipart/form-data; boundary=voiceassistant-boundary
+
+--voiceassistant-boundary
+Content-Disposition: form-data; name="audio"; filename="anna-agile-robots.wav"
+Content-Type: audio/wav
+
+< ./audioexamples/anna-agile-robots.wav
+--voiceassistant-boundary--
+
+### Completed Siemens visit: one visit report, no tasks
+# "I visited David from Siemens today. Their engineering team is evaluating fifty licenses. The budget has already been approved."
+# @name uploadVisitOnly
+# @timeout 600 s
+POST {{baseUrl}}/v1/audiomessage
+Accept: application/json
+Content-Type: multipart/form-data; boundary=voiceassistant-boundary
+
+--voiceassistant-boundary
+Content-Disposition: form-data; name="audio"; filename="david-siemens-visit.wav"
+Content-Type: audio/wav
+
+< ./audioexamples/david-siemens-visit.wav
+--voiceassistant-boundary--
+
+### Bosch call reminder: one task for next Tuesday, no visit report
+# "Remind me next Tuesday to call Emma from Bosch about renewing twenty five licenses."
+# @name uploadCallReminder
+# @timeout 600 s
+POST {{baseUrl}}/v1/audiomessage
+Accept: application/json
+Content-Type: multipart/form-data; boundary=voiceassistant-boundary
+
+--voiceassistant-boundary
+Content-Disposition: form-data; name="audio"; filename="emma-bosch-reminder.wav"
+Content-Type: audio/wav
+
+< ./audioexamples/emma-bosch-reminder.wav
+--voiceassistant-boundary--

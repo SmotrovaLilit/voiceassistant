@@ -1,5 +1,0 @@
-package: voiceassistantclient
-generate:
-  models: true
-  client: true
-output: voiceassistant-api/pkg/client/client.gen.go

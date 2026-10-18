@@ -35,9 +35,7 @@ var headers = map[string][]string{
 
 type Config struct {
 	SpreadsheetID   string
-	CredentialsJSON string
 	CredentialsFile string
-	HTTPClient      *http.Client
 }
 
 type CRMRepository struct {
@@ -51,13 +49,9 @@ func New(ctx context.Context, config Config) (*CRMRepository, error) {
 	if strings.TrimSpace(config.SpreadsheetID) == "" {
 		return nil, errors.New("GOOGLE_SPREADSHEET_ID is required")
 	}
-	client := config.HTTPClient
-	if client == nil {
-		var err error
-		client, err = newClient(ctx, config)
-		if err != nil {
-			return nil, err
-		}
+	client, err := newClient(ctx, config)
+	if err != nil {
+		return nil, err
 	}
 	crm := &CRMRepository{
 		endpoint: sheetsAPIURL + url.PathEscape(config.SpreadsheetID),
@@ -74,16 +68,12 @@ func New(ctx context.Context, config Config) (*CRMRepository, error) {
 }
 
 func newClient(ctx context.Context, config Config) (*http.Client, error) {
-	credentials := []byte(config.CredentialsJSON)
-	if len(credentials) == 0 && config.CredentialsFile != "" {
-		var err error
-		credentials, err = os.ReadFile(config.CredentialsFile)
-		if err != nil {
-			return nil, fmt.Errorf("read Google credentials: %w", err)
-		}
+	if strings.TrimSpace(config.CredentialsFile) == "" {
+		return nil, errors.New("GOOGLE_CREDENTIALS_FILE is required")
 	}
-	if len(credentials) == 0 {
-		return nil, errors.New("GOOGLE_CREDENTIALS_JSON or GOOGLE_CREDENTIALS_FILE is required")
+	credentials, err := os.ReadFile(config.CredentialsFile)
+	if err != nil {
+		return nil, fmt.Errorf("read Google credentials: %w", err)
 	}
 	jwtConfig, err := google.JWTConfigFromJSON(credentials, "https://www.googleapis.com/auth/spreadsheets")
 	if err != nil {

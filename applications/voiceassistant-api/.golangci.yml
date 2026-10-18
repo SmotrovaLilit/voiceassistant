@@ -5,8 +5,6 @@ run:
   modules-download-mode: readonly
   issues-exit-code: 2
   tests: false
-  allow-parallel-runners: true
-  allow-serial-runners: true
 linters:
   default: none
   enable:
@@ -20,7 +18,6 @@ linters:
     - gocritic
     - gocyclo
     - godot
-    - goheader
     - gosec
     - govet
     - ineffassign
@@ -29,9 +26,7 @@ linters:
     - nestif
     - noctx
     - revive
-    - rowserrcheck
     - sloglint
-    - sqlclosecheck
     - staticcheck
     - unconvert
     - unparam
@@ -43,7 +38,6 @@ linters:
       capital: true
       period: true
     sloglint:
-      no-mixed-args: false
       context: all
       key-naming-case: snake
       forbidden-keys:
@@ -60,23 +54,9 @@ linters:
       - common-false-positives
       - legacy
       - std-error-handling
-    paths:
-      - third_party$
-      - builtin$
-      - examples$
-severity:
-  default: error
-  rules:
-    - linters:
-        - dupl
-      severity: info
 formatters:
   enable:
     - gofmt
     - goimports
   exclusions:
     generated: lax
-    paths:
-      - third_party$
-      - builtin$
-      - examples$

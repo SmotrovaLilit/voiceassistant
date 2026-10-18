@@ -15,7 +15,9 @@ test:
 	GOWORK=off go test -mod=readonly ./...
 
 run:
-	GOWORK=off go run -mod=readonly ./cmd
+	@set -eu; set -a; \
+	if [ -f .env ]; then . ./.env; fi; \
+	set +a; GOWORK=off go run -mod=readonly ./cmd
 
 build:
 	GOWORK=off go build -mod=readonly -o bin/voiceassistant-api ./cmd

@@ -16,7 +16,6 @@ import (
 
 type Config struct {
 	BaseURL            string
-	APIKey             string
 	TranscriptionModel string
 	AnalysisModel      string
 	Timezone           *time.Location
@@ -43,9 +42,6 @@ func (c *Client) request(ctx context.Context, path, contentType string, body io.
 		return fmt.Errorf("create LocalAI request: %w", err)
 	}
 	request.Header.Set("Content-Type", contentType)
-	if c.config.APIKey != "" {
-		request.Header.Set("Authorization", "Bearer "+c.config.APIKey)
-	}
 	response, err := c.config.HTTPClient.Do(request)
 	if err != nil {
 		return fmt.Errorf("call LocalAI: %w", err)

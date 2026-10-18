@@ -14,7 +14,6 @@ import (
 type config struct {
 	address            string
 	spreadsheetID      string
-	credentialsJSON    string
 	credentialsFile    string
 	localAIURL         string
 	transcriptionModel string
@@ -40,7 +39,6 @@ func loadConfig() (config, error) {
 	return config{
 		address:            net.JoinHostPort(envOr("LISTEN_ADDRESS", "127.0.0.1"), envOr("PORT", "8081")),
 		spreadsheetID:      envOr("GOOGLE_SPREADSHEET_ID", ""),
-		credentialsJSON:    envOr("GOOGLE_CREDENTIALS_JSON", ""),
 		credentialsFile:    envOr("GOOGLE_CREDENTIALS_FILE", ""),
 		localAIURL:         envOr("LOCALAI_BASE_URL", "http://127.0.0.1:8080/v1"),
 		transcriptionModel: envOr("TRANSCRIPTION_MODEL", "whisper-small"),

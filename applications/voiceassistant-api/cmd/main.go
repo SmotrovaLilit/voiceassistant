@@ -37,7 +37,7 @@ func run(ctx context.Context, logger *slog.Logger) error {
 		return err
 	}
 	client, err := localai.New(localai.Config{
-		BaseURL: config.localAIURL, APIKey: os.Getenv("LOCALAI_API_KEY"),
+		BaseURL:            config.localAIURL,
 		TranscriptionModel: config.transcriptionModel, AnalysisModel: config.analysisModel,
 		Timezone: config.timezone, HTTPClient: &http.Client{Timeout: config.processingTimeout},
 	})
@@ -45,8 +45,7 @@ func run(ctx context.Context, logger *slog.Logger) error {
 		return fmt.Errorf("configure LocalAI: %w", err)
 	}
 	crm, err := googlesheetscrm.New(ctx, googlesheetscrm.Config{
-		SpreadsheetID:   config.spreadsheetID,
-		CredentialsJSON: config.credentialsJSON, CredentialsFile: config.credentialsFile,
+		SpreadsheetID: config.spreadsheetID, CredentialsFile: config.credentialsFile,
 	})
 	if err != nil {
 		return fmt.Errorf("configure Google Sheets CRM: %w", err)
