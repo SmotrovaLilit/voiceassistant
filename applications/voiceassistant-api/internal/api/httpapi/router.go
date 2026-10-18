@@ -46,7 +46,7 @@ func NewRouter(config Config) *gin.Engine {
 		if c.Request.Method == http.MethodPost && c.FullPath() == "/v1/audiomessage" {
 			mediaType, parameters, err := mime.ParseMediaType(c.GetHeader("Content-Type"))
 			if err != nil || mediaType != "multipart/form-data" {
-				c.AbortWithStatusJSON(http.StatusUnsupportedMediaType, server.Error{Code: "unsupported_media_type", Message: "Use multipart/form-data with id and audio fields."})
+				c.AbortWithStatusJSON(http.StatusUnsupportedMediaType, server.Error{Code: "unsupported_media_type", Message: "Use multipart/form-data with an audio file."})
 				return
 			}
 			if parameters["boundary"] == "" {

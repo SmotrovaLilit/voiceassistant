@@ -10,8 +10,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/google/uuid"
-
 	server "contracts/voiceassistant-api/pkg/server"
 	"voiceassistant-api/internal/domain"
 )
@@ -20,7 +18,7 @@ func (h *handler) UploadAudioMessage(ctx context.Context, request server.UploadA
 	if request.Body == nil {
 		return problem(http.StatusBadRequest, "invalid_multipart", "The audio upload is missing."), nil
 	}
-	form, err := request.Body.ReadForm(8 << 20)
+	form, err := request.Body.ReadForm(h.config.MaxAudioBytes + multipartOverhead)
 	if err != nil {
 		var limit *http.MaxBytesError
 		if errors.As(err, &limit) || errors.Is(err, multipart.ErrMessageTooLarge) {
@@ -50,12 +48,9 @@ func (h *handler) UploadAudioMessage(ctx context.Context, request server.UploadA
 	processingCtx, cancel := context.WithTimeout(ctx, h.config.ProcessingTimeout)
 	defer cancel()
 	message, err := h.config.Service.UploadAudio(processingCtx, upload)
-	if errors.Is(err, domain.ErrAlreadyExists) {
-		return problem(http.StatusConflict, "audiomessage_already_exists", "An audio message with this UUID already exists."), nil
-	}
 	if err != nil {
 		recordError(ctx, err)
-		return problem(http.StatusServiceUnavailable, "processing_unavailable", "The audio could not be processed."), nil
+		return problem(http.StatusServiceUnavailable, "processing_unavailable", "The audio could not be processed and saved in the CRM."), nil
 	}
 	response, err := convertAudioMessageToResponse(message)
 	if err != nil {
@@ -65,13 +60,8 @@ func (h *handler) UploadAudioMessage(ctx context.Context, request server.UploadA
 }
 
 func (h *handler) parseUpload(form *multipart.Form) (domain.AudioUpload, *problemResponse) {
-	if len(form.Value["id"]) != 1 || len(form.File["audio"]) != 1 {
-		issue := problem(http.StatusBadRequest, "invalid_upload", "Provide exactly one id field and one audio file.")
-		return domain.AudioUpload{}, &issue
-	}
-	id, err := uuid.Parse(strings.TrimSpace(form.Value["id"][0]))
-	if err != nil || id == uuid.Nil {
-		issue := problem(http.StatusBadRequest, "invalid_id", "A non-zero audio message UUID is required.")
+	if len(form.File["audio"]) != 1 {
+		issue := problem(http.StatusBadRequest, "invalid_upload", "Provide exactly one audio file.")
 		return domain.AudioUpload{}, &issue
 	}
 	file := form.File["audio"][0]
@@ -93,7 +83,7 @@ func (h *handler) parseUpload(form *multipart.Form) (domain.AudioUpload, *proble
 		contentType = declared
 	}
 	return domain.AudioUpload{
-		ID: id.String(), Filename: filepath.Base(file.Filename), ContentType: contentType,
+		Filename: filepath.Base(file.Filename), ContentType: contentType,
 	}, nil
 }
 
@@ -117,12 +107,50 @@ func audioContentType(filename string) string {
 }
 
 func convertAudioMessageToResponse(message domain.AudioMessage) (server.AudioMessage, error) {
-	id, err := uuid.Parse(message.ID)
-	if err != nil {
-		return server.AudioMessage{}, fmt.Errorf("decode audio message UUID: %w", err)
+	workflows := make([]server.Workflow, 0, len(message.Workflows))
+	for _, workflow := range message.Workflows {
+		converted, err := convertWorkflowToResponse(workflow)
+		if err != nil {
+			return server.AudioMessage{}, err
+		}
+		workflows = append(workflows, converted)
 	}
 	return server.AudioMessage{
-		Id: id, Transcription: message.Transcription, Analysis: message.Analysis,
-		CreatedAt: message.CreatedAt,
+		Transcription: message.Transcription, Workflows: workflows,
 	}, nil
+}
+
+func convertWorkflowToResponse(workflow domain.Workflow) (server.Workflow, error) {
+	var response server.Workflow
+	var err error
+	switch payload := workflow.Payload.(type) {
+	case domain.TaskPayload:
+		err = response.FromTaskWorkflow(server.TaskWorkflow{
+			Payload: server.TaskPayload{
+				Title: payload.Title, ClientName: optionalString(payload.ClientName),
+				Description: optionalString(payload.Description), DueAt: optionalString(payload.DueAt),
+				RemindAt: optionalString(payload.RemindAt),
+			},
+		})
+	case domain.VisitReportPayload:
+		err = response.FromVisitReportWorkflow(server.VisitReportWorkflow{
+			Payload: server.VisitReportPayload{
+				Summary: payload.Summary, ClientName: optionalString(payload.ClientName),
+				ContactName: optionalString(payload.ContactName), VisitedAt: optionalString(payload.VisitedAt),
+			},
+		})
+	default:
+		return response, fmt.Errorf("unsupported workflow payload %T", workflow.Payload)
+	}
+	if err != nil {
+		return response, fmt.Errorf("encode workflow response: %w", err)
+	}
+	return response, nil
+}
+
+func optionalString(value string) *string {
+	if value == "" {
+		return nil
+	}
+	return &value
 }

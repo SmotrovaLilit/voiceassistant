@@ -14,9 +14,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"voiceassistant-api/internal/adapters/filestorage"
+	"voiceassistant-api/internal/adapters/googlesheetscrm"
 	"voiceassistant-api/internal/adapters/localai"
-	"voiceassistant-api/internal/adapters/sqlite"
 	"voiceassistant-api/internal/api/httpapi"
 	"voiceassistant-api/internal/application"
 )
@@ -32,7 +31,7 @@ func main() {
 	}
 }
 
-func run(ctx context.Context, logger *slog.Logger) (runErr error) {
+func run(ctx context.Context, logger *slog.Logger) error {
 	config, err := loadConfig()
 	if err != nil {
 		return err
@@ -45,16 +44,14 @@ func run(ctx context.Context, logger *slog.Logger) (runErr error) {
 	if err != nil {
 		return fmt.Errorf("configure LocalAI: %w", err)
 	}
-	database, err := sqlite.Open(ctx, config.databasePath)
+	crm, err := googlesheetscrm.New(ctx, googlesheetscrm.Config{
+		SpreadsheetID:   config.spreadsheetID,
+		CredentialsJSON: config.credentialsJSON, CredentialsFile: config.credentialsFile,
+	})
 	if err != nil {
-		return err
+		return fmt.Errorf("configure Google Sheets CRM: %w", err)
 	}
-	defer func() { runErr = errors.Join(runErr, database.Close()) }()
-	files, err := filestorage.NewFileRepository(config.fileStorageDir)
-	if err != nil {
-		return err
-	}
-	service := application.NewService(sqlite.NewAudioMessageRepository(database), files, client, client)
+	service := application.NewService(crm, client, client)
 	gin.SetMode(gin.ReleaseMode)
 	router := httpapi.NewRouter(httpapi.Config{
 		Service: service, MaxAudioBytes: config.maxAudioBytes,

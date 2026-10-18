@@ -13,8 +13,9 @@ import (
 
 type config struct {
 	address            string
-	databasePath       string
-	fileStorageDir     string
+	spreadsheetID      string
+	credentialsJSON    string
+	credentialsFile    string
 	localAIURL         string
 	transcriptionModel string
 	analysisModel      string
@@ -38,8 +39,9 @@ func loadConfig() (config, error) {
 	}
 	return config{
 		address:            net.JoinHostPort(envOr("LISTEN_ADDRESS", "127.0.0.1"), envOr("PORT", "8081")),
-		databasePath:       envOr("SERVICE_DATABASE_PATH", "./data/service.db"),
-		fileStorageDir:     envOr("FILE_STORAGE_DIR", "./data/audio"),
+		spreadsheetID:      envOr("GOOGLE_SPREADSHEET_ID", ""),
+		credentialsJSON:    envOr("GOOGLE_CREDENTIALS_JSON", ""),
+		credentialsFile:    envOr("GOOGLE_CREDENTIALS_FILE", ""),
 		localAIURL:         envOr("LOCALAI_BASE_URL", "http://127.0.0.1:8080/v1"),
 		transcriptionModel: envOr("TRANSCRIPTION_MODEL", "whisper-small"),
 		analysisModel:      envOr("LLM_MODEL", "qwen3-4b"),
