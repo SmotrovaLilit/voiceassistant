@@ -44,3 +44,19 @@ Content-Type: audio/wav
 
 < ./audioexamples/emma-bosch-reminder.wav
 --voiceassistant-boundary--
+
+### Unintelligible audio: a short noise fragment without speech
+# A valid half-second WAV recording, too short to recognize speech.
+# Expected: HTTP 503 processing_unavailable; no CRM records are created.
+# @name uploadUnintelligibleAudio
+# @timeout 600 s
+POST {{baseUrl}}/v1/audiomessage
+Accept: application/json
+Content-Type: multipart/form-data; boundary=voiceassistant-boundary
+
+--voiceassistant-boundary
+Content-Disposition: form-data; name="audio"; filename="unintelligible-noise.wav"
+Content-Type: audio/wav
+
+< ./audioexamples/unintelligible-noise.wav
+--voiceassistant-boundary--

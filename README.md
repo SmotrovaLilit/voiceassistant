@@ -30,7 +30,7 @@ To start only LocalAI, use `make up`. To run only the API, use `make -C applicat
 
 ## Try the recording
 
-Open [request.http](request.http) in GoLand or IntelliJ IDEA and click **Run** for one of the four English recordings. In VS Code, use the REST Client extension and click **Send Request**. The audio files are already included in the requests.
+Open [request.http](request.http) in GoLand or IntelliJ IDEA and click **Run** for a speech recording or the noise-only error example. In VS Code, use the REST Client extension and click **Send Request**. The audio files are already included in the requests.
 
 The Anna recording says:
 
