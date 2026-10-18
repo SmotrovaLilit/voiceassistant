@@ -1,0 +1,6 @@
+package: voiceassistantserver
+generate:
+  models: true
+  gin-server: true
+  strict-server: true
+output: voiceassistant-api/pkg/server/server.gen.go

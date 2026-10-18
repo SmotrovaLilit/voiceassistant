@@ -1,0 +1,37 @@
+name: voiceassistant
+
+services:
+  localai:
+    image: localai/localai:v4.11.0
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${LOCALAI_PORT:-8080}:8080"
+    environment:
+      LOCALAI_MODELS_PATH: /models
+      LOCALAI_BACKENDS_PATH: /backends
+      LOCALAI_CONFIG_DIR: /configuration
+      LOCALAI_DATA_PATH: /data
+    # Models and inference backends are downloaded on the first start.
+    command:
+      # POST /v1/audio/transcriptions, model: whisper-small
+      - whisper-small
+      # POST /v1/chat/completions, model: qwen3-4b
+      - qwen3-4b
+    volumes:
+      - localai-models:/models
+      - localai-backends:/backends
+      - localai-configuration:/configuration
+      - localai-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/readyz"]
+      interval: 30s
+      timeout: 10s
+      # The initial model download can take a while.
+      start_period: 60m
+      retries: 3
+
+volumes:
+  localai-models:
+  localai-backends:
+  localai-configuration:
+  localai-data:
