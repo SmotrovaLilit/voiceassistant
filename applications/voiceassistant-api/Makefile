@@ -16,7 +16,7 @@ test:
 
 run:
 	@set -eu; set -a; \
-	if [ -f .env ]; then . ./.env; fi; \
+	if [ -f ../../runtime/.env ]; then . ../../runtime/.env; fi; \
 	set +a; GOWORK=off go run -mod=readonly ./cmd
 
 build:
